@@ -98,7 +98,6 @@
     </div>
 
     <script>
-        // Same JavaScript logic as the original, just removing inline styles and comments for brevity
         const qrInput = document.getElementById('qr-input');
         const decodeBtn = document.getElementById('decode-btn');
         const downloadBtn = document.getElementById('download-btn');
@@ -190,8 +189,13 @@
         });
 
         downloadBtn.addEventListener('click', () => {
-            const textContent = decodedTextDiv.textContent;
+            const textContent = decodedTextDiv.textContent.trim();
             
+            if (!textContent) {
+                alert("No content to download. Please decode a QR code first.");
+                return;
+            }
+
             let filename = filenameInput.value.trim();
 
             if (!filename) {
@@ -202,15 +206,21 @@
                 filename += ".conf";
             }
 
-            const blob = new Blob([textContent], { type: "application/x-config" });
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement("a");
-            link.href = url;
+            // Create a Blob with the content
+            const blob = new Blob([textContent], { type: "text/plain" });
+            
+            // Create a link element, use it for download, and immediately remove it
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
             link.download = filename;
-
+            
+            // Append to the body, click, and remove
+            document.body.appendChild(link);
             link.click();
-            URL.revokeObjectURL(url);
+            document.body.removeChild(link);
+
+            // Revoke the blob URL to free up memory
+            URL.revokeObjectURL(link.href);
 
             qrInput.disabled = true;
             decodeBtn.disabled = true;
